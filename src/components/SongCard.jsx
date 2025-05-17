@@ -11,9 +11,9 @@ export default function SongCard({ song, user, onSave }) {
   const [scores, setScores] = useState({ performance: 0, song: 0, vocal: 0 });
   const total = Object.values(scores).reduce((a, b) => a + b, 0);
 
-  const handleScoreChange = (field) => (e) => {
+  /* ---- handlers -------------------------------------------------------- */
+  const handleScoreChange = field => e =>
     setScores({ ...scores, [field]: Number(e.target.value) });
-  };
 
   const saveVote = async () => {
     const { error } = await supabase.from('votes').upsert({
@@ -27,23 +27,39 @@ export default function SongCard({ song, user, onSave }) {
     if (!error) {
       onSave(song.id, total);
       setOpen(false);
+    } else {
+      alert('Could not save: ' + error.message);
     }
   };
 
+  /* ---- render ---------------------------------------------------------- */
   return (
     <div className="bg-white rounded-2xl shadow p-4 mb-4">
+      {/* Header row ------------------------------------------------------- */}
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setOpen(!open)}
       >
-        <div>
-          <h3 className="font-display text-lg text-primary leading-tight">
-            {song.title}
-          </h3>
-          <p className="text-sm text-gray-600">
-            {song.country} · {song.artist}
-          </p>
+        <div className="flex items-center gap-4">
+          {/* country flag */}
+          <Image
+            src={`https://flagcdn.com/w40/${song.flag}.png`}
+            alt={`${song.country} flag`}
+            width={24}
+            height={18}
+            className="rounded-full ring-1 ring-gray-200"
+            unoptimized /* remove if you add flagcdn to next.config.js */
+          />
+          <div>
+            <h3 className="font-display text-lg text-primary leading-tight">
+              {song.title}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {song.country} · {song.artist}
+            </p>
+          </div>
         </div>
+
         <div className="flex items-center gap-3">
           {total > 0 && (
             <span className="font-bold text-accent text-xl w-10 text-right">
@@ -54,6 +70,7 @@ export default function SongCard({ song, user, onSave }) {
         </div>
       </div>
 
+      {/* Collapsible score selectors -------------------------------------- */}
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -65,7 +82,7 @@ export default function SongCard({ song, user, onSave }) {
             className="overflow-hidden"
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-              {['performance', 'song', 'vocal'].map((field) => (
+              {['performance', 'song', 'vocal'].map(field => (
                 <div key={field} className="flex flex-col">
                   <label className="mb-1 capitalize text-sm text-gray-700">
                     {field}
@@ -75,7 +92,7 @@ export default function SongCard({ song, user, onSave }) {
                     onChange={handleScoreChange(field)}
                     className="border rounded-xl p-2"
                   >
-                    {Array.from({ length: 13 }, (_, i) => i).map((n) => (
+                    {Array.from({ length: 13 }, (_, i) => i).map(n => (
                       <option key={n} value={n}>
                         {n}
                       </option>
@@ -84,6 +101,7 @@ export default function SongCard({ song, user, onSave }) {
                 </div>
               ))}
             </div>
+
             <button
               onClick={saveVote}
               className="mt-4 inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl hover:opacity-90"
